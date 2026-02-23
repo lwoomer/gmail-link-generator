@@ -219,23 +219,59 @@
 
   /* Output */
   .output-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    word-break: break-all;
-    line-height: 1.6;
-    max-height: 120px;
-    overflow-y: auto;
-    margin-bottom: 14px;
-    transition: border-color 0.3s;
+    display: none;
   }
 
-  .output-box.has-link {
+  .copy-textarea {
+    width: 100%;
+    background: rgba(251,191,36,0.06);
+    border: 2px solid rgba(251,191,36,0.35);
+    border-radius: 6px;
     color: var(--accent2);
-    border-color: rgba(251,191,36,0.2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 12px 14px;
+    line-height: 1.6;
+    resize: none;
+    height: 88px;
+    margin-bottom: 8px;
+    outline: none;
+    word-break: break-all;
+    cursor: text;
+    display: none;
+  }
+
+  .copy-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .copy-hint.visible {
+    display: flex;
+  }
+
+  .copy-hint .kbd {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    color: var(--text);
+  }
+
+  .placeholder-hint {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 14px;
   }
 
   /* Preview */
@@ -432,12 +468,13 @@
   <!-- GENERATE CARD -->
   <div class="card">
     <div class="card-title">// generate</div>
-    <div class="output-box" id="outputBox">
-      <span class="placeholder">Your Gmail link will appear here after generating...</span>
+    <div id="placeholderHint" style="background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:14px;font-size:0.78rem;color:var(--text-muted);font-style:italic;margin-bottom:14px;">Your Gmail link will appear here — click the box to select it, then copy with Cmd+C / Ctrl+C.</div>
+    <textarea id="copyTextarea" readonly onclick="this.select()" style="display:none;width:100%;background:rgba(251,191,36,0.06);border:2px solid rgba(251,191,36,0.35);border-radius:6px;color:var(--accent2);font-family:'DM Mono',monospace;font-size:0.75rem;padding:12px 14px;line-height:1.6;resize:none;height:88px;margin-bottom:8px;outline:none;word-break:break-all;cursor:text;"></textarea>
+    <div id="copyHint" style="display:none;font-size:0.72rem;color:var(--text-muted);margin-bottom:14px;">
+      👆 Click the box above to select all, then press <span style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:0.7rem;color:var(--text);">Cmd+C</span> / <span style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:0.7rem;color:var(--text);">Ctrl+C</span> to copy
     </div>
     <div class="btn-row">
       <button class="btn-primary" onclick="generateLink()">⚡ Generate Link</button>
-      <button class="btn-secondary" onclick="copyLink()" id="copyBtn" disabled>Copy Link</button>
     </div>
   </div>
 
@@ -454,8 +491,6 @@
 <div class="toast" id="toast">✓ Copied to clipboard!</div>
 
 <script>
-  let generatedLink = '';
-
   function onInputChange() {
     updatePreview();
   }
@@ -504,18 +539,13 @@
       + (subject ? '&su=' + encodeURIComponent(subject) : '')
       + (body ? '&body=' + encodeURIComponent(body) : '');
 
-    generatedLink = encoded;
+    const textarea = document.getElementById('copyTextarea');
+    textarea.value = encoded;
+    textarea.style.display = 'block';
+    textarea.select();
 
-    const box = document.getElementById('outputBox');
-    box.textContent = encoded;
-    box.classList.add('has-link');
-
-    document.getElementById('copyBtn').disabled = false;
-  }
-
-  function copyLink() {
-    if (!generatedLink) return;
-    navigator.clipboard.writeText(generatedLink).then(() => showToastMsg('✓ Copied to clipboard!', '#4ade80'));
+    document.getElementById('placeholderHint').style.display = 'none';
+    document.getElementById('copyHint').style.display = 'block';
   }
 
   function showToastMsg(msg, color) {
